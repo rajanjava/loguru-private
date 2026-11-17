@@ -325,3 +325,22 @@ def test_invalid_grouped_exception_no_exceptions(writer):
     logger.opt(exception=error).error("Error")
 
     assert writer.read().strip().startswith("| unittest.mock.MagicMock:")
+
+
+@pytest.mark.skipif(sys.version_info < (3, 11), reason="No builtin BaseExceptionGroup")
+def test_base_exception_group_members_formatted(writer):
+    logger.add(writer, backtrace=False, diagnose=False, colorize=False, format="{message}")
+
+    try:
+        raise BaseExceptionGroup(  # noqa: F821
+            "mixed failures",
+            [ValueError("data failed"), KeyboardInterrupt("worker interrupted")],
+        )
+    except BaseExceptionGroup:  # noqa: F821
+        logger.exception("operation failed")
+
+    output = writer.read()
+    assert "ValueError: data failed" in output
+    assert "KeyboardInterrupt: worker interrupted" in output
+    assert "+ Exception Group Traceback (most recent call last):" in output
+
