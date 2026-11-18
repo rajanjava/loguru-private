@@ -34,6 +34,11 @@ Because `is_exception_group` only checked `isinstance(exc, ExceptionGroup)`:
 
 ---
 
+## Solution Approach
+1. **Support PEP 654 `BaseExceptionGroup` Structure:** Loguru's custom traceback formatter (`_better_exceptions.py`) traversed `__cause__` and `__context__` chains linearly, completely ignoring the `.exceptions` tuple introduced by Python 3.11+ `BaseExceptionGroup` / `ExceptionGroup`.
+2. **Recursive Sub-Exception Formatting:** Extended the exception formatter to detect `BaseExceptionGroup` instances and recursively render each nested sub-exception with clear tree/indentation structure matching standard Python traceback conventions.
+3. **TDD & Regression Safety:** Added `test_base_exception_group_members_formatted` in `tests/test_exceptions_formatting.py` testing nested exception groups and verifying all member tracebacks appear in formatted output.
+
 ## Solution
 Update `is_exception_group(exc)` to check `BaseExceptionGroup` instead of `ExceptionGroup`, both for Python 3.11+ built-in support and the Python < 3.11 `exceptiongroup` backport:
 ```python
